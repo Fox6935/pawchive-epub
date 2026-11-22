@@ -1,8 +1,10 @@
-# Kemono EPUB Creator
+# Pawchive EPUB
 
 A browser extension for downloading selected posts from
 [Kemono](https://kemono.cr) and [Pawchive](https://pawchive.pw) as organized
 EPUB ebooks.
+
+Formerly Kemono EPUB Creator.
 
 Browse a creator's posts, select individual chapters or a chapter range, choose
 a dynamic filename format, and compile the result into an EPUB containing
@@ -47,7 +49,7 @@ directly from their webpages.
 
 ### Mozilla Firefox
 
-Kemono EPUB Creator is available from the
+Pawchive EPUB is available from the
 [Firefox Add-ons store](https://addons.mozilla.org/en-US/firefox/addon/kemono-epub-creator/).
 
 To load the source temporarily:

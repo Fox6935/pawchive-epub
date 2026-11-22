@@ -14,6 +14,8 @@ import {
   generateDynamicFilename
 } from "./filenameGenerator.js";
 
+import { showEpubCompletionDialog } from "./completionDialog.js";
+
 // --- Global state ---
 let allFetchedPosts = [];
 let selectedPosts = {};
@@ -407,9 +409,7 @@ function updateOverallUIState() {
     noPostsFoundMessage.style.display = showNoPostsMessage ? "block" : "none";
   }
 
-  const hasMoreByCount =
-    totalAvailablePosts == null || totalFetchedOffset < totalAvailablePosts;
-  const showLoadButtons = !atEndOfPosts && hasMoreByCount && !isLoadingMore && !isPacking && !showLoadingMessage && !showNoPostsMessage;
+  const showLoadButtons = !atEndOfPosts && !isLoadingMore && !isPacking && !showLoadingMessage && !showNoPostsMessage;
   if (loadMoreBtn) {
     loadMoreBtn.style.display = showLoadButtons ? "inline-block" : "none";
     loadMoreBtn.disabled = isLoadingMore;
@@ -644,7 +644,6 @@ function handleFilenamePatternChange(event) {
 function handleLoadMore() {
   if (
     !atEndOfPosts &&
-    (totalAvailablePosts == null || totalFetchedOffset < totalAvailablePosts) &&
     !isLoadingMore
   ) {
     loadPostsPage(totalFetchedOffset);
@@ -714,9 +713,7 @@ async function handlePackEpub() {
         updatePackingProgressUI();
       }
     );
-    progressMessage = result.skippedPosts.length
-      ? `EPUB generated; ${result.skippedPosts.length} post(s) were skipped.`
-      : "EPUB generated and download started!";
+    showEpubCompletionDialog(result);
   } catch (err) {
     if (err?.name === "AbortError") {
       progressMessage = "EPUB generation cancelled.";

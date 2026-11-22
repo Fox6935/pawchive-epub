@@ -307,6 +307,7 @@ function showDownloadConfirmationModal(postData) {
     try {
       // 1. Dynamic Import of the Generator
       const { generateKemonoEpub } = await import(chrome.runtime.getURL("EpubGenerator.js"));
+      const { showEpubCompletionDialog } = await import(chrome.runtime.getURL("completionDialog.js"));
       // 2. Prepare Data
       const creatorInfo = {
         site: postData.site,
@@ -326,7 +327,7 @@ function showDownloadConfirmationModal(postData) {
       // 3. Run Generator
       statusText.textContent = "Processing content...";
       
-      await generateKemonoEpub(
+      const result = await generateKemonoEpub(
         creatorInfo,
         selectedPostStubs,
         options,
@@ -336,8 +337,8 @@ function showDownloadConfirmationModal(postData) {
         }
       );
 
-      // 4. Close on success
-      setTimeout(() => overlay.remove(), 1000);
+      overlay.remove();
+      showEpubCompletionDialog(result);
 
     } catch (err) {
       if (err?.name === "AbortError") {

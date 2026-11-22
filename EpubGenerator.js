@@ -457,6 +457,10 @@ class AssetBudget {
     }
     this.used += size;
   }
+
+  release(size) {
+    this.used -= size;
+  }
 }
 
 async function processImageBlob(blob, url, signal) {
@@ -634,17 +638,21 @@ export class KemonoContentParser {
         continue;
       }
 
+      let reservedBytes = 0;
       try {
         const rawBlob = await HttpClient.fetchBlob(this.siteKey, absoluteSrc, {
           signal: this.signal
         });
         this.assetBudget.reserve(rawBlob.size);
+        reservedBytes = rawBlob.size;
         const { blob, mimeType, extension } = await processImageBlob(
           rawBlob,
           absoluteSrc,
           this.signal
         );
         this.assetBudget.reserve(Math.max(0, blob.size - rawBlob.size));
+        this.assetBudget.release(Math.max(0, rawBlob.size - blob.size));
+        reservedBytes = blob.size;
         const fileNameInEpub = sanitizeArchiveFilename(
           `inline_${postData.id}_${i}.${extension}`
         );
@@ -661,6 +669,7 @@ export class KemonoContentParser {
 
         img.setAttribute("src", `../Images/${fileNameInEpub}`);
       } catch (e) {
+        this.assetBudget.release(reservedBytes);
         if (e?.name === "AbortError") throw e;
         replaceUnavailableImage(img);
       }
@@ -908,6 +917,7 @@ img { max-width: 100%; height: auto; }
 `);
 
   if (options.coverImageUrl) {
+    let reservedBytes = 0;
     try {
       const rawBlob = await HttpClient.fetchBlob(
         creatorInfo.site,
@@ -915,15 +925,19 @@ img { max-width: 100%; height: auto; }
         { signal }
       );
       assetBudget.reserve(rawBlob.size);
+      reservedBytes = rawBlob.size;
       const { blob, mimeType, extension } = await processImageBlob(
         rawBlob,
         options.coverImageUrl,
         signal
       );
       assetBudget.reserve(Math.max(0, blob.size - rawBlob.size));
+      assetBudget.release(Math.max(0, rawBlob.size - blob.size));
+      reservedBytes = blob.size;
       await packer.addCoverImage(blob, `cover.${extension}`, mimeType);
       progressCallback(5, "Cover image processed.");
     } catch (e) {
+      assetBudget.release(reservedBytes);
       if (e?.name === "AbortError") throw e;
       console.warn("Cover image error:", e);
     }
